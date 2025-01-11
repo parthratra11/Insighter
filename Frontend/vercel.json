@@ -6,7 +6,7 @@
   },
   "routes": [
     {
-      "source": "/api/(.*)",
+      "src": "/api/(.*)",
       "destination": "/app/api/$1"
     }
   ]
