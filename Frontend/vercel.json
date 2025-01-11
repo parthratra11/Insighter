@@ -1,7 +1,13 @@
 {
   "functions": {
-    "api/collection/*.js": {
+    "app/api/**/*.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "routes": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/app/api/$1"
+    }
+  ]
 }

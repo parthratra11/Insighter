@@ -1,4 +1,6 @@
-export const runtime = "edge"; // Add this at the top
+export const runtime = "nodejs";
+export const preferredRegion = "auto";
+export const maxDuration = 60;
 
 import { NextResponse } from "next/server";
 
