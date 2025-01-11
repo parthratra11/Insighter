@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { DashboardCard } from "./components/DashboardCard";
 import Papa from "papaparse";
-import { ChatBot } from "./components/ChatBot";
+import ChatBot from "./components/ChatBot";
 
 const COLORS = [
   "#6366f1",
@@ -47,7 +47,7 @@ const tabs = [
   { name: "Hashtags", icon: Hash },
 ];
 
-function App() {
+const App = function () {
   const [activeTab, setActiveTab] = useState("Overview");
   const [data, setData] = useState([]);
 
@@ -173,192 +173,195 @@ function App() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-16 bg-gray-900 flex flex-col items-center py-8 space-y-8">
-        {tabs.map(({ name, icon: Icon }) => (
-          <button
-            key={name}
-            onClick={() => setActiveTab(name)}
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-              activeTab === name
-                ? "bg-indigo-600 text-white"
-                : "text-gray-500 hover:text-indigo-500"
-            }`}
-          >
-            <Icon className="w-6 h-6" />
-          </button>
-        ))}
-      </div>
-
-      {/* Main content */}
-      <div className="ml-16 p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-5xl font-bold font-mono">Insighter...</h1>
+    <>
+      <div className="min-h-screen bg-gray-950 text-white">
+        {/* Sidebar */}
+        <div className="fixed left-0 top-0 h-full w-16 bg-gray-900 flex flex-col items-center py-8 space-y-8">
+          {tabs.map(({ name, icon: Icon }) => (
+            <button
+              key={name}
+              onClick={() => setActiveTab(name)}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                activeTab === name
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-500 hover:text-indigo-500"
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+            </button>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DashboardCard title="Post Type Performance" className="col-span-2">
-            <div className="h-80">
-              <ResponsiveContainer>
-                <BarChart data={Object.values(postTypeEngagement)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="name" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "none",
-                      color: "#ffffff",
-                    }}
-                  />
-                  <Bar
-                    name="Average Engagements"
-                    dataKey="avgEngagement"
-                    fill="#6366f1"
-                  />
-                  <Legend />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </DashboardCard>
+        {/* Main content */}
+        <div className="ml-16 p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-5xl font-bold font-mono">Insighter...</h1>
+          </div>
 
-          <DashboardCard title="Content Genre Performance">
-            <div className="h-80">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={Object.values(genrePerformance)}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="avgEngagement"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <DashboardCard title="Post Type Performance" className="col-span-2">
+              <div className="h-80">
+                <ResponsiveContainer>
+                  <BarChart data={Object.values(postTypeEngagement)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="name" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1F2937",
+                        border: "none",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Bar
+                      name="Average Engagements"
+                      dataKey="avgEngagement"
+                      fill="#6366f1"
+                    />
+                    <Legend />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard title="Content Genre Performance">
+              <div className="h-80">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={Object.values(genrePerformance)}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="avgEngagement"
+                    >
+                      {Object.values(genrePerformance).map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "none",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
+
+            <DashboardCard title="Engagement Over Time" className="col-span-2">
+              <div className="h-80">
+                <ResponsiveContainer>
+                  <AreaChart
+                    data={Object.values(timeEngagement).sort(
+                      (a, b) => new Date(a.date) - new Date(b.date)
+                    )}
                   >
-                    {Object.values(genrePerformance).map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "none",
-                      color: "#ffffff",
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </DashboardCard>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="date" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1F2937",
+                        border: "none",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="engagements"
+                      stroke="#6366f1"
+                      fill="#6366f1"
+                      fillOpacity={0.5}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
 
-          <DashboardCard title="Engagement Over Time" className="col-span-2">
-            <div className="h-80">
-              <ResponsiveContainer>
-                <AreaChart
-                  data={Object.values(timeEngagement).sort(
-                    (a, b) => new Date(a.date) - new Date(b.date)
-                  )}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="date" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "none",
-                      color: "#ffffff",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="engagements"
-                    stroke="#6366f1"
-                    fill="#6366f1"
-                    fillOpacity={0.5}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </DashboardCard>
+            <DashboardCard title="Device Distribution">
+              <div className="h-80">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={deviceData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {deviceData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "none",
+                        color: "#ffffff",
+                      }}
+                      formatter={(value) =>
+                        `${(Number(value) * 100).toFixed(1)}%`
+                      }
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
 
-          <DashboardCard title="Device Distribution">
-            <div className="h-80">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={deviceData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {deviceData.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "none",
-                      color: "#ffffff",
-                    }}
-                    formatter={(value) =>
-                      `${(Number(value) * 100).toFixed(1)}%`
-                    }
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </DashboardCard>
-
-          <DashboardCard
-            title="Engagement vs. Completion Rate"
-            className="col-span-2"
-          >
-            <div className="h-80">
-              <ResponsiveContainer>
-                <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis
-                    type="number"
-                    dataKey="engagement_rate"
-                    name="Engagement Rate"
-                    stroke="#9CA3AF"
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="completion_rate"
-                    name="Completion Rate"
-                    stroke="#9CA3AF"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "none",
-                      color: "#ffffff",
-                    }}
-                  />
-                  <Scatter name="Posts" data={data} fill="#6366f1" />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-          </DashboardCard>
+            <DashboardCard
+              title="Engagement vs. Completion Rate"
+              className="col-span-2"
+            >
+              <div className="h-80">
+                <ResponsiveContainer>
+                  <ScatterChart>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis
+                      type="number"
+                      dataKey="engagement_rate"
+                      name="Engagement Rate"
+                      stroke="#9CA3AF"
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="completion_rate"
+                      name="Completion Rate"
+                      stroke="#9CA3AF"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "none",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Scatter name="Posts" data={data} fill="#6366f1" />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+            </DashboardCard>
+          </div>
         </div>
         <ChatBot />
       </div>
-    </div>
+    </>
   );
-}
+};
 
+export { App };
 export default App;

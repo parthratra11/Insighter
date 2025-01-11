@@ -1,60 +1,9 @@
+"use client";
+
 import React, { useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 
-//! Needs fixing
-
-class LangflowClient {
-  constructor(baseURL, applicationToken) {
-    this.baseURL = baseURL;
-    this.applicationToken = applicationToken;
-  }
-
-  async post(endpoint, body, headers = {}) {
-    headers["Authorization"] = `Bearer ${this.applicationToken}`;
-    headers["Content-Type"] = "application/json";
-    const url = `${this.baseURL}${endpoint}`;
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(body),
-      });
-
-      const responseMessage = await response.json();
-      if (!response.ok) {
-        throw new Error(
-          `${response.status} ${response.statusText} - ${JSON.stringify(
-            responseMessage
-          )}`
-        );
-      }
-      return responseMessage;
-    } catch (error) {
-      console.error("Request Error:", error.message);
-      throw error;
-    }
-  }
-
-  async runFlow(
-    flowId,
-    langflowId,
-    inputValue,
-    inputType = "chat",
-    outputType = "chat",
-    tweaks = {}
-  ) {
-    const endpoint = `/lf/${langflowId}/api/v1/run/${flowId}`;
-    return this.post(endpoint, {
-      input_value: inputValue,
-      input_type: inputType,
-      output_type: outputType,
-      tweaks: tweaks,
-    });
-  }
-}
-
-export function ChatBot() {
+const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -65,26 +14,6 @@ export function ChatBot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize the Langflow client
-  const langflowClient = new LangflowClient(
-    "https://api.langflow.astra.datastax.com",
-    process.env.NEXT_PUBLIC_LANGFLOW_API_TOKEN
-  );
-
-  const tweaks = {
-    "ChatInput-ufonD": {},
-    "ParseData-nVbw4": {},
-    "Prompt-Mbumw": {},
-    "SplitText-gcj2y": {},
-    "ChatOutput-kKsN3": {},
-    "AstraDB-s0C8l": {},
-    "OpenAIEmbeddings-QECx2": {},
-    "File-kj26O": {},
-    "AstraDBToolComponent-6ImZP": {},
-    "OpenAIModel-pgFdD": {},
-    "MistralModel-sTyFL": {},
-  };
-
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -93,28 +22,28 @@ export function ChatBot() {
     setIsLoading(true);
 
     try {
-      const response = await langflowClient.runFlow(
-        "d6dc026b-b629-441d-bf94-8ddafc1ac6c1", // flowId
-        "6280155c-72f5-4a5e-a1de-1199cea3c176", // langflowId
-        input,
-        "chat",
-        "chat",
-        tweaks
-      );
+      const response = await fetch("/api/collection", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputValue: input.trim() }),
+      });
 
-      // Extract the response message
-      let aiResponse = "I couldn't process your request.";
-      if (
-        response &&
-        response.outputs &&
-        response.outputs[0].outputs[0].outputs.message
-      ) {
-        aiResponse =
-          response.outputs[0].outputs[0].outputs.message.message.text;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error Response:", errorText);
+        throw new Error(`API error: ${response.statusText}`);
       }
 
+      const data = await response.json();
+
       // Add AI response to chat
-      setMessages((prev) => [...prev, { text: aiResponse, isUser: false }]);
+      if (data && data.message) {
+        setMessages((prev) => [...prev, { text: data.message, isUser: false }]);
+      } else {
+        throw new Error("Unexpected API response structure");
+      }
     } catch (error) {
       console.error("Error:", error);
       setMessages((prev) => [
@@ -208,6 +137,6 @@ export function ChatBot() {
       )}
     </div>
   );
-}
+};
 
 export default ChatBot;

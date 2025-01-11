@@ -1,21 +1,19 @@
-import type { Metadata } from "next";
 import "./globals.css";
+import { App } from "./page";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Social Media Analytics",
   description: "Created by part-time students",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
