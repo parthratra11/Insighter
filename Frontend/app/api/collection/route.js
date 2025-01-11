@@ -1,3 +1,5 @@
+export const runtime = "edge"; // Add this at the top
+
 import { NextResponse } from "next/server";
 
 class LangflowClient {
@@ -10,12 +12,18 @@ class LangflowClient {
     headers["Authorization"] = `Bearer ${this.applicationToken}`;
     const url = `${this.baseURL}${endpoint}`;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       const response = await fetch(url, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const responseMessage = await response.json();
       if (!response.ok) {
@@ -27,6 +35,10 @@ class LangflowClient {
       }
       return responseMessage;
     } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        throw new Error("Request timed out after 30 seconds");
+      }
       console.error("Request Error:", error.message);
       throw error;
     }
@@ -94,14 +106,14 @@ class LangflowClient {
         stream,
         tweaks
       );
-      console.log("Init Response:", initResponse);
+      // console.log("Init Response:", initResponse);
       if (
         stream &&
         initResponse?.outputs?.[0]?.outputs?.[0]?.artifacts?.stream_url
       ) {
         const streamUrl =
           initResponse.outputs[0].outputs[0].artifacts.stream_url;
-        console.log(`Streaming from: ${streamUrl}`);
+        // console.log(`Streaming from: ${streamUrl}`);
         this.handleStream(streamUrl, onUpdate, onClose, onError);
       }
       return initResponse;
@@ -152,18 +164,23 @@ export async function POST(req) {
       "MistralModel-sTyFL": {},
     };
 
-    const response = await langflowClient.runFlow(
-      flowIdOrName,
-      langflowId,
-      inputValue,
-      inputType,
-      outputType,
-      tweaks,
-      stream,
-      (data) => console.log("Received:", data.chunk),
-      (message) => console.log("Stream Closed:", message),
-      (error) => console.log("Stream Error:", error)
-    );
+    const response = await Promise.race([
+      langflowClient.runFlow(
+        flowIdOrName,
+        langflowId,
+        inputValue,
+        inputType,
+        outputType,
+        tweaks,
+        stream,
+        (data) => console.log("Received:", data.chunk),
+        (message) => console.log("Stream Closed:", message),
+        (error) => console.log("Stream Error:", error)
+      ),
+      new Promise((_, reject) =>
+        setTimeout((e) => reject(new Error("Operation timed out")), 50000)
+      ),
+    ]);
 
     if (!stream && response?.outputs) {
       const flowOutputs = response.outputs[0];
@@ -176,6 +193,9 @@ export async function POST(req) {
     return NextResponse.json({ response });
   } catch (error) {
     console.error("Handler Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Request timed out" },
+      { status: error.message.includes("timed out") ? 504 : 500 }
+    );
   }
 }

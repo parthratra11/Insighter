@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/collection/*.js": {
+      "maxDuration": 60
+    }
+  }
+}
